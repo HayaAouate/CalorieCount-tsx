@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  mongo-db:
+    image: mongo:latest
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - mongodb-data:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://root:root@mongo-db:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: root
+      ME_CONFIG_BASICAUTH_PASSWORD: root
+    depends_on:
+      - mongo-db
+
+  # Backend Node.js
+  backend:
+    build: ./server
+    container_name: node_backend
+    ports:
+      - "5000:3000"
+    environment:
+      - MONGO_URI=mongodb://root:root@mongo-db:27017/count-cal?authSource=admin
+    depends_on:
+      - mongo-db
+
+  # Frontend React
+  frontend:
+    build: ./web # Le dossier frontend
+    container_name: react_frontend
+    ports:
+      - "5173:5173" # Port standard Vite
+    stdin_open: true
+    volumes:
+      - ./web:/app # Hot Reload : on monte le dossier web vers /app
+      - /app/node_modules # On exclut node_modules
+      - /app/server # n'existe plus dans web, mais on peut laisser ou enlever
+    depends_on:
+      - backend
+
+volumes:
+  mongodb-data:

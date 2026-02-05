@@ -1,0 +1,4 @@
+npm install mongoose dotenv
+npm install -D @types/mongoose
+docker-compose up -d --build backend
+npm install express-jwt jsonwebtoken
