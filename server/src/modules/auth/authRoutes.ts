@@ -2,33 +2,74 @@ import { Router } from "express";
 import Joi from "joi";
 import { createValidator } from "express-joi-validation";
 import { createAuthToken } from "./jwt";
+import { db } from "../../db";
+import bcrypt from "bcryptjs";
 
-// Initialisation du validateur si non importé globalement
 const validator = createValidator();
-
 export const authRoutes = Router();
+
+const usersCollection = db.collection("users");
+
+// --- Types & Schemas ---
 
 export type LoginData = {
     username: string;
+    password: string;
 };
 
-// Schéma simplifié pour l'instant car pas de DB user défini pour le login
-const loginInfoDataSchema = Joi.object<LoginData>({
+const loginSchema = Joi.object<LoginData>({
     username: Joi.string().required(),
+    password: Joi.string().required(),
 });
 
+// --- Routes ---
+
+// POST /auth/register : Inscription
+authRoutes.post(
+    "/register",
+    validator.body(loginSchema),
+    async (request, response) => {
+        const { username, password } = request.body as LoginData;
+
+        try {
+            // Check if user exists
+            const existingUser = await usersCollection.findOne({ username });
+            if (existingUser) {
+                response.status(400).json({ message: "Username already exists" });
+                return;
+            }
+
+            // Hash password before storing
+            const hashedPassword = await bcrypt.hash(password, 10);
+            await usersCollection.insertOne({ username, password: hashedPassword, role: "user" });
+
+            response.status(201).json({ message: "User created successfully" });
+        } catch (error) {
+            console.error("Register error:", error);
+            response.status(500).json({ message: "Internal server error" });
+        }
+    }
+);
+
+// POST /auth/login : Connexion
 authRoutes.post(
     "/login",
-    validator.body(loginInfoDataSchema),
+    validator.body(loginSchema),
     async (request, response) => {
-        const { username } = request.body as LoginData;
+        const { username, password } = request.body as LoginData;
 
-        // Simulation d'une authentification réussie pour tout username non vide
-        // Dans un vrai cas, on vérifierait le mot de passe dans la BDD
+        try {
+            const user = await usersCollection.findOne({ username });
 
-        // Génération du token
-        const token = createAuthToken({ userId: username, role: "user" }); // UserId = username pour simplifier
-
-        response.json({ token, message: `Welcome ${username}` });
+            if (user && await bcrypt.compare(password, user.password)) {
+                const token = createAuthToken({ userId: user._id.toString(), role: "user" });
+                response.json({ token, username: user.username });
+            } else {
+                response.status(401).json({ message: "Invalid credentials" });
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            response.status(500).json({ message: "Internal server error" });
+        }
     },
 );

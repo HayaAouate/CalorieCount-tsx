@@ -6,7 +6,7 @@ export type JwtPayload = {
     role: "admin" | "user";
 };
 
-const SECRET_KEY = "plop"; // In production, move to env vars
+const SECRET_KEY = "plop";
 const ALGORITHM = "HS256";
 
 export const createAuthToken = (payload: JwtPayload): string => {

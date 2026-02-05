@@ -1,10 +1,23 @@
 import './App.css';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import InputApport from './components/inputApport';
 import ListesApportsAll from './components/listesApportsAll';
 import BilanCalories from './components/bilanCalories';
+import Login from './components/auth/Login';
+import Register from './components/auth/Register';
 import { CaloriesProvider } from './contexts/calorieContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-function App() {
+function Dashboard() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    console.log("handleLogout called!");
+    logout();
+    navigate('/login');
+  };
+
   return (
     <CaloriesProvider>
       <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-indigo-500/30">
@@ -15,7 +28,17 @@ function App() {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-12 max-w-5xl">
-          <header className="mb-12 text-center">
+          <header className="mb-12 text-center relative">
+            <div className="absolute right-0 top-0 z-50">
+              <span className="text-sm mr-4 text-slate-400">Bonjour, <span className="text-white font-bold">{user}</span></span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-3 py-1 text-xs font-bold text-slate-300 bg-slate-800 rounded hover:bg-slate-700 transition cursor-pointer"
+              >
+                Déconnexion
+              </button>
+            </div>
             <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-4 drop-shadow-sm">
               Mon Suivi Calories
             </h1>
@@ -36,6 +59,41 @@ function App() {
         <BilanCalories />
       </div>
     </CaloriesProvider>
+  );
+}
+
+import React from 'react';
+
+// Protected Route Component
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
