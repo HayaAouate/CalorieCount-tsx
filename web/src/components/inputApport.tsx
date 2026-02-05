@@ -4,24 +4,21 @@ import { useCalories } from '../hooks/useCalories';
 export default function InputApport() {
     const { ajouterApport } = useCalories();
 
-    // State for transaction type: TO IMPLEMENT
-    // const [type, setType] = useState<'apport' | 'depense'>('apport');
+    // State for transaction type
+    const [type, setType] = useState<'apport' | 'depense'>('apport');
     const [nom, setNom] = useState('');
     const [calories, setCalories] = useState('');
 
     const handleClick = () => {
         if (nom && calories) {
             let calValue = parseInt(calories);
-
-            // TODO: Gerer type (apport/depense)
-            ajouterApport(nom, calValue);
+            ajouterApport(nom, calValue, type);
             setNom('');
             setCalories('');
         }
     };
 
-    // const isApport = type === 'apport';
-    const isApport = true; // Placeholder
+    const isApport = type === 'apport';
     const mainColor = isApport ? 'indigo' : 'emerald';
     const gradient = isApport
         ? 'from-indigo-600 to-purple-600'
@@ -36,13 +33,26 @@ export default function InputApport() {
             <div className="relative p-8 bg-slate-900/80 backdrop-blur-xl rounded-xl border border-slate-700/50 shadow-2xl">
                 <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                     <span className={`bg-${mainColor}-500/20 p-2 rounded-lg text-${mainColor}-400`}>
-                        🍎
+                        {isApport ? '🍎' : '🏃'}
                     </span>
-                    Nouvel Apport
+                    {isApport ? 'Nouvel Apport' : 'Nouvelle Dépense'}
                 </h2>
 
-                {/* Type Toggle - A REMETTRE PLUS TARD */}
-                {/* <div className="flex p-1 bg-slate-800/50 rounded-lg mb-6 border border-slate-700/50"> ... </div> */}
+                {/* Type Toggle */}
+                <div className="flex p-1 bg-slate-800/50 rounded-lg mb-6 border border-slate-700/50">
+                    <button
+                        onClick={() => setType('apport')}
+                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${isApport ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        Apport
+                    </button>
+                    <button
+                        onClick={() => setType('depense')}
+                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${!isApport ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                    >
+                        Dépense
+                    </button>
+                </div>
 
                 <div className="space-y-4">
                     <div className="group/input">

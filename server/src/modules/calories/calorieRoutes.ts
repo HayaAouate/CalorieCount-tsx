@@ -11,7 +11,7 @@ export const calorieRoutes = express.Router();
 
 const PUBLIC_USER_ID = "guest";
 
-// GET /calories : Récupérer les données (avec filtre optionnel sur le type)
+// Récupérer les données avec filtre 
 calorieRoutes.get("/", async (request: Request, response: Response) => {
     const userId = PUBLIC_USER_ID;
     const { type } = request.query;
@@ -32,7 +32,7 @@ calorieRoutes.get("/", async (request: Request, response: Response) => {
     }
 });
 
-// POST /calories : Ajouter une nouvelle entrée
+// Ajouter une nouvelle entrée
 calorieRoutes.post(
     "/",
     validator.body(calorieSchema),
@@ -55,4 +55,21 @@ calorieRoutes.post(
         }
     },
 );
+
+// DELETE /calories/:id : Supprimer une entrée
+calorieRoutes.delete("/:id", async (request: Request, response: Response) => {
+    const { id } = request.params;
+    try {
+        const { ObjectId } = require("mongodb");
+        const result = await caloriesCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount === 0) {
+            response.status(404).json({ message: "Entry not found" });
+            return;
+        }
+        response.json({ message: "Entry deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting entry:", error);
+        response.status(500).json({ message: "Internal Server Error" });
+    }
+});
 

@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react';
 
-// 1. On définit le format de nos données (le "contrat")
+//  On définit nos datas
 type Apport = {
     id: string;
     nom: string;
@@ -12,16 +12,17 @@ type Apport = {
 type CaloriesContextType = {
     apports: Apport[];
     ajouterApport: (nom: string, calories: number, type?: 'apport' | 'depense') => void;
+    supprimerApport: (id: string) => void;
 };
 
-// 2. On crée le Context (le "Canal" de communication)
+
 export const CaloriesContext = createContext<CaloriesContextType | undefined>(undefined);
 
-// 3. On crée le Provider (le "Diffuseur")
+// Provider:
 export function CaloriesProvider({ children }: { children: ReactNode }) {
     const [apports, setApports] = useState<Apport[]>([]);
 
-    // Fetch initial data
+    // Fetch cals:
     useEffect(() => {
         const fetchCalories = async () => {
             try {
@@ -68,8 +69,19 @@ export function CaloriesProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const supprimerApport = async (id: string) => {
+        try {
+            await fetch(`http://localhost:3000/calories/${id}`, {
+                method: 'DELETE',
+            });
+            setApports((prev) => prev.filter((item) => item.id !== id));
+        } catch (error) {
+            console.error("Error deleting calorie:", error);
+        }
+    };
+
     return (
-        <CaloriesContext.Provider value={{ apports, ajouterApport }}>
+        <CaloriesContext.Provider value={{ apports, ajouterApport, supprimerApport }}>
             {children}
         </CaloriesContext.Provider>
     );

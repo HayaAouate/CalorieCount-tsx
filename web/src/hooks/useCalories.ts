@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { CaloriesContext } from '../contexts/calorieContext';
 
-// C'est ici qu'on met la logique de calcul "qui change tout au long"
+// logic de calcul
 export function useCalories() {
     const context = useContext(CaloriesContext);
 
@@ -9,15 +9,18 @@ export function useCalories() {
         throw new Error("useCalories doit être utilisé à l'intérieur d'un CaloriesProvider");
     }
 
-    const { apports, ajouterApport } = context;
+    const { apports, ajouterApport, supprimerApport } = context;
 
-    // Calcul du total (La fonction demandée)
-    // Elle se recalcule automatiquement dès que 'apports' change
-    const totalCalories = apports.reduce((total, item) => total + item.calories, 0);
+    // Calcul du total 
+    // dès que 'apports' change on recalcul automatiquement
+    const totalCalories = apports.reduce((total, item) => {
+        return item.type === 'depense' ? total - item.calories : total + item.calories;
+    }, 0);
 
     return {
         apports,
         ajouterApport,
-        totalCalories // On renvoie le résultat calculé
+        supprimerApport,
+        totalCalories
     };
 }
