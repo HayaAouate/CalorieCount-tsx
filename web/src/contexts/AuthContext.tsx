@@ -11,17 +11,24 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [token, setToken] = useState<string | null>(null);
-    const [user, setUser] = useState<string | null>(null);
+    // Initialiser depuis localStorage si disponible
+    const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+    const [user, setUser] = useState<string | null>(() => localStorage.getItem('user'));
 
     const login = (newToken: string, username: string) => {
         setToken(newToken);
         setUser(username);
+        // Sauvegarder dans localStorage
+        localStorage.setItem('token', newToken);
+        localStorage.setItem('user', username);
     };
 
     const logout = () => {
         setToken(null);
         setUser(null);
+        // Supprimer de localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
     };
 
     const isAuthenticated = !!token;
@@ -40,3 +47,4 @@ export function useAuth() {
     }
     return context;
 }
+

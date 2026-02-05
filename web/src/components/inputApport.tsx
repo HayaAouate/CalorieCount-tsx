@@ -1,5 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCalories } from '../hooks/useCalories';
+
+type Template = {
+    _id: string;
+    nom: string;
+    calories: number;
+    type: 'apport' | 'depense';
+};
 
 export default function InputApport() {
     const { ajouterApport } = useCalories();
@@ -8,6 +15,15 @@ export default function InputApport() {
     const [type, setType] = useState<'apport' | 'depense'>('apport');
     const [nom, setNom] = useState('');
     const [calories, setCalories] = useState('');
+    const [templates, setTemplates] = useState<Template[]>([]);
+
+    // Fetch templates on mount
+    useEffect(() => {
+        fetch('http://localhost:3000/templates')
+            .then(res => res.json())
+            .then(data => setTemplates(data))
+            .catch(err => console.error('Error fetching templates:', err));
+    }, []);
 
     const handleClick = () => {
         if (nom && calories) {
@@ -18,6 +34,16 @@ export default function InputApport() {
         }
     };
 
+    const handleTemplateSelect = (templateId: string) => {
+        const template = templates.find(t => t._id === templateId);
+        if (template) {
+            setNom(template.nom);
+            setCalories(template.calories.toString());
+            setType(template.type);
+        }
+    };
+
+    const filteredTemplates = templates.filter(t => t.type === type);
     const isApport = type === 'apport';
     const mainColor = isApport ? 'indigo' : 'emerald';
     const gradient = isApport
@@ -39,7 +65,7 @@ export default function InputApport() {
                 </h2>
 
                 {/* Type Toggle */}
-                <div className="flex p-1 bg-slate-800/50 rounded-lg mb-6 border border-slate-700/50">
+                <div className="flex p-1 bg-slate-800/50 rounded-lg mb-4 border border-slate-700/50">
                     <button
                         onClick={() => setType('apport')}
                         className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${isApport ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
@@ -53,6 +79,27 @@ export default function InputApport() {
                         Dépense
                     </button>
                 </div>
+
+                {/* Template Dropdown */}
+                {filteredTemplates.length > 0 && (
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-slate-400 mb-1 ml-1">
+                            📋 Sélection rapide
+                        </label>
+                        <select
+                            onChange={(e) => handleTemplateSelect(e.target.value)}
+                            className={`w-full p-3 rounded-lg bg-slate-800/50 text-white border border-slate-700 focus:border-${mainColor}-500 focus:ring-2 focus:ring-${mainColor}-500/20 outline-none transition-all cursor-pointer`}
+                            defaultValue=""
+                        >
+                            <option value="" disabled>Choisir un template...</option>
+                            {filteredTemplates.map(t => (
+                                <option key={t._id} value={t._id}>
+                                    {t.nom} ({t.calories} kcal)
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
                 <div className="space-y-4">
                     <div className="group/input">
@@ -94,3 +141,4 @@ export default function InputApport() {
         </div>
     );
 }
+

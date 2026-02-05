@@ -10,7 +10,7 @@ export const authRoutes = Router();
 
 const usersCollection = db.collection("users");
 
-// --- Types & Schemas ---
+//shema
 
 export type LoginData = {
     username: string;
@@ -22,7 +22,7 @@ const loginSchema = Joi.object<LoginData>({
     password: Joi.string().required(),
 });
 
-// --- Routes ---
+
 
 // POST /auth/register : Inscription
 authRoutes.post(
@@ -32,14 +32,14 @@ authRoutes.post(
         const { username, password } = request.body as LoginData;
 
         try {
-            // Check if user exists
+            // verifie si l'utilisateur existe
             const existingUser = await usersCollection.findOne({ username });
             if (existingUser) {
                 response.status(400).json({ message: "Username already exists" });
                 return;
             }
 
-            // Hash password before storing
+            // Encodage avec bcrypt
             const hashedPassword = await bcrypt.hash(password, 10);
             await usersCollection.insertOne({ username, password: hashedPassword, role: "user" });
 
@@ -62,8 +62,8 @@ authRoutes.post(
             const user = await usersCollection.findOne({ username });
 
             if (user && await bcrypt.compare(password, user.password)) {
-                const token = createAuthToken({ userId: user._id.toString(), role: "user" });
-                response.json({ token, username: user.username });
+                const token = createAuthToken({ userId: user._id.toString(), role: user.role || "user" });
+                response.json({ token, username: user.username, role: user.role || "user" });
             } else {
                 response.status(401).json({ message: "Invalid credentials" });
             }

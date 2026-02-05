@@ -5,16 +5,19 @@ import {
     calorieSchema,
     caloriesCollection,
 } from "./calorieModels";
+import { authMiddleware } from "../auth/jwt";
 
 const validator = createValidator();
 export const calorieRoutes = express.Router();
 
-const PUBLIC_USER_ID = "guest";
+// Apply authMiddleware to all routes in this router
+calorieRoutes.use(authMiddleware as any);
 
-// Récupérer les données avec filtre 
 calorieRoutes.get("/", async (request: Request, response: Response) => {
-    const userId = PUBLIC_USER_ID;
+    const userId = (request as any).auth?.userId;
     const { type } = request.query;
+
+    console.log(`User ${userId} is fetching calories. Filter: ${type || 'None'}`);
 
     console.log(`User ${userId} is fetching calories. Filter: ${type || 'None'}`);
 
@@ -37,7 +40,7 @@ calorieRoutes.post(
     "/",
     validator.body(calorieSchema),
     async (request: Request, response: Response) => {
-        const userId = PUBLIC_USER_ID;
+        const userId = (request as any).auth?.userId;
         const entry = request.body as CalorieEntry;
 
         const newEntry: CalorieEntry = {
@@ -56,12 +59,13 @@ calorieRoutes.post(
     },
 );
 
-// DELETE /calories/:id : Supprimer une entrée
 calorieRoutes.delete("/:id", async (request: Request, response: Response) => {
+    const userId = (request as any).auth?.userId;
     const { id } = request.params;
     try {
         const { ObjectId } = require("mongodb");
-        const result = await caloriesCollection.deleteOne({ _id: new ObjectId(id) });
+        // Only delete if it belongs to the user
+        const result = await caloriesCollection.deleteOne({ _id: new ObjectId(id), userId });
         if (result.deletedCount === 0) {
             response.status(404).json({ message: "Entry not found" });
             return;
