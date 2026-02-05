@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 
 //  On définit nos datas
 type Apport = {
@@ -21,12 +22,19 @@ export const CaloriesContext = createContext<CaloriesContextType | undefined>(un
 // Provider:
 export function CaloriesProvider({ children }: { children: ReactNode }) {
     const [apports, setApports] = useState<Apport[]>([]);
+    const { token } = useAuth();
 
     // Fetch cals:
     useEffect(() => {
+        if (!token) return; // Don't fetch if not logged in
+
         const fetchCalories = async () => {
             try {
-                const response = await fetch('http://localhost:3000/calories');
+                const response = await fetch('http://localhost:3000/calories', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 const data = await response.json();
                 // Map _id to id
                 const formattedData = data.map((item: any) => ({
@@ -43,20 +51,22 @@ export function CaloriesProvider({ children }: { children: ReactNode }) {
         };
 
         fetchCalories();
-    }, []);
+    }, [token]);
 
     const ajouterApport = async (nom: string, calories: number, type: 'apport' | 'depense' = 'apport') => {
+        if (!token) return;
         try {
             const response = await fetch('http://localhost:3000/calories', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ nom, calories, type }),
             });
             const newEntry = await response.json();
 
-            // Add to local state (optimistic or after confirm)
+            //met à jr l'affichage immediatement
             setApports((prev) => [...prev, {
                 id: newEntry.id || newEntry._id, // Backend returns id as alias in my previous fix, but safe check
                 nom: newEntry.nom,
@@ -70,9 +80,13 @@ export function CaloriesProvider({ children }: { children: ReactNode }) {
     };
 
     const supprimerApport = async (id: string) => {
+        if (!token) return;
         try {
             await fetch(`http://localhost:3000/calories/${id}`, {
                 method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
             setApports((prev) => prev.filter((item) => item.id !== id));
         } catch (error) {
