@@ -1,17 +1,17 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react';
 
 // 1. On définit le format de nos données (le "contrat")
-// 1. On définit le format de nos données (le "contrat")
 type Apport = {
     id: string;
     nom: string;
     calories: number;
     type: 'apport' | 'depense';
+    date?: string; // Optionnel pour l'affichage
 };
 
 type CaloriesContextType = {
     apports: Apport[];
-    ajouterApport: (nom: string, calories: number, type: 'apport' | 'depense') => void;
+    ajouterApport: (nom: string, calories: number, type?: 'apport' | 'depense') => void;
 };
 
 // 2. On crée le Context (le "Canal" de communication)
@@ -23,40 +23,49 @@ export function CaloriesProvider({ children }: { children: ReactNode }) {
 
     // Fetch initial data
     useEffect(() => {
-        fetch('http://localhost:3000/calories')
-            .then(res => res.json())
-            .then(data => {
-                // Map database _id to id if necessary, or just rely on backend format
+        const fetchCalories = async () => {
+            try {
+                const response = await fetch('http://localhost:3000/calories');
+                const data = await response.json();
+                // Map _id to id
                 const formattedData = data.map((item: any) => ({
-                    id: item._id || item.id,
+                    id: item._id,
                     nom: item.nom,
                     calories: item.calories,
-                    type: item.type || (item.calories < 0 ? 'depense' : 'apport') // Fallback logic
+                    type: item.type,
+                    date: item.date
                 }));
                 setApports(formattedData);
-            })
-            .catch(err => console.error("Error fetching calories:", err));
+            } catch (error) {
+                console.error("Failed to fetch calories:", error);
+            }
+        };
+
+        fetchCalories();
     }, []);
 
-    const ajouterApport = (nom: string, calories: number, type: 'apport' | 'depense') => {
-        const payload = { nom, calories, type };
+    const ajouterApport = async (nom: string, calories: number, type: 'apport' | 'depense' = 'apport') => {
+        try {
+            const response = await fetch('http://localhost:3000/calories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ nom, calories, type }),
+            });
+            const newEntry = await response.json();
 
-        fetch('http://localhost:3000/calories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-            .then(res => res.json())
-            .then(savedItem => {
-                const nouvelApport: Apport = {
-                    id: savedItem.id || savedItem._id,
-                    nom: savedItem.nom,
-                    calories: savedItem.calories,
-                    type: savedItem.type
-                };
-                setApports(prev => [...prev, nouvelApport]);
-            })
-            .catch(err => console.error("Error adding calorie:", err));
+            // Add to local state (optimistic or after confirm)
+            setApports((prev) => [...prev, {
+                id: newEntry.id || newEntry._id, // Backend returns id as alias in my previous fix, but safe check
+                nom: newEntry.nom,
+                calories: newEntry.calories,
+                type: newEntry.type,
+                date: newEntry.date
+            }]);
+        } catch (error) {
+            console.error("Error adding calorie:", error);
+        }
     };
 
     return (

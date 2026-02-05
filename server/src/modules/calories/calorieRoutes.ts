@@ -1,28 +1,30 @@
-import { Router } from "express";
+import express, { Request, Response } from "express";
 import { createValidator } from "express-joi-validation";
 import {
     CalorieEntry,
     calorieSchema,
     caloriesCollection,
 } from "./calorieModels";
-// import { authMiddleware, JwtPayload } from "../auth/jwt"; // Disabled for public access
 
 const validator = createValidator();
-export const calorieRoutes = Router();
-
-// Toutes les routes calories demandent d'être authentifié -> DISABLED
-// calorieRoutes.use(authMiddleware);
+export const calorieRoutes = express.Router();
 
 const PUBLIC_USER_ID = "guest";
 
-// GET /calories : Récupérer les données de l'utilisateur "guest"
-calorieRoutes.get("/", async (request, response) => {
-    // const { userId } = (request as any).auth as JwtPayload;
+// GET /calories : Récupérer les données (avec filtre optionnel sur le type)
+calorieRoutes.get("/", async (request: Request, response: Response) => {
     const userId = PUBLIC_USER_ID;
+    const { type } = request.query;
 
-    console.log(`User ${userId} is fetching calories`);
+    console.log(`User ${userId} is fetching calories. Filter: ${type || 'None'}`);
+
+    const query: any = { userId };
+    if (type) {
+        query.type = type;
+    }
+
     try {
-        const result = await caloriesCollection.find({ userId }).toArray();
+        const result = await caloriesCollection.find(query).toArray();
         response.json(result);
     } catch (error) {
         console.error("Error fetching calories:", error);
@@ -34,22 +36,18 @@ calorieRoutes.get("/", async (request, response) => {
 calorieRoutes.post(
     "/",
     validator.body(calorieSchema),
-    async (request, response) => {
-        // const { userId } = (request as any).auth as JwtPayload;
+    async (request: Request, response: Response) => {
         const userId = PUBLIC_USER_ID;
-
         const entry = request.body as CalorieEntry;
 
-        // On force l'association avec le userId du token pour la sécurité
         const newEntry: CalorieEntry = {
             ...entry,
             userId: userId,
-            date: new Date() // Ou entry.date si fourni
+            date: new Date()
         };
 
         try {
             const result = await caloriesCollection.insertOne(newEntry);
-            // Important: Return the complete object including _id
             response.json({ ...newEntry, id: result.insertedId.toString() });
         } catch (error) {
             console.error("Error adding calorie entry:", error);
@@ -57,3 +55,4 @@ calorieRoutes.post(
         }
     },
 );
+

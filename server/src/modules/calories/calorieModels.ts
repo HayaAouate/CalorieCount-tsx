@@ -7,16 +7,15 @@ export type CalorieEntry = {
     calories: number;
     type: 'apport' | 'depense';
     date: Date;
-    userId: string; // Lien avec l'utilisateur
+    userId: string;
 };
 
 export const calorieSchema = Joi.object<CalorieEntry>({
     nom: Joi.string().required(),
     calories: Joi.number().required(),
     type: Joi.string().valid('apport', 'depense').required(),
-    date: Joi.date().default(() => new Date()), // Par défaut maintenant
-    userId: Joi.string().optional() // Sera ajouté par le backend via le token
+    date: Joi.date().default(() => new Date()),
+    userId: Joi.string().optional()
 });
 
-console.log("LOADING CalorieModels with TYPE field...");
 export const caloriesCollection = db.collection<CalorieEntry>("logs");
