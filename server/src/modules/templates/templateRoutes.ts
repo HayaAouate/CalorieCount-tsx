@@ -16,7 +16,7 @@ const adminOnly = (req: Request, res: Response, next: NextFunction) => {
     next();
 };
 
-// GET /templates : Récupérer tous les templates (accessible à tous, même sans auth)
+// GET /templates : Récupérer les templates 
 templateRoutes.get("/", async (_request: Request, response: Response) => {
     try {
         const templates = await templatesCollection.find({}).toArray();
@@ -31,16 +31,20 @@ templateRoutes.get("/", async (_request: Request, response: Response) => {
 templateRoutes.post(
     "/",
     authMiddleware as any,
+    // 🔒 SÉCURITÉ : Seul un admin peut exécuter cette action
     adminOnly,
     validator.body(templateSchema),
     async (request: Request, response: Response) => {
         const template = request.body as Template;
 
         try {
+            console.log("🟠 BACKEND: Tentative d'insertion du template en BDD:", template);
             const result = await templatesCollection.insertOne(template);
+            console.log("✅ BACKEND: Template inséré avec succès ! ID:", result.insertedId);
+
             response.status(201).json({ ...template, id: result.insertedId.toString() });
         } catch (error) {
-            console.error("Error creating template:", error);
+            console.error("❌ Error creating template:", error);
             response.status(500).json({ message: "Internal Server Error" });
         }
     }

@@ -1,19 +1,19 @@
 import './App.css';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom';
 import InputApport from './components/inputApport';
 import ListesApportsAll from './components/listesApportsAll';
 import BilanCalories from './components/bilanCalories';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import AdminTemplates from './components/admin/AdminTemplates';
 import { CaloriesProvider } from './contexts/calorieContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    console.log("handleLogout called!");
     logout();
     navigate('/login');
   };
@@ -29,8 +29,13 @@ function Dashboard() {
 
         <div className="relative z-10 container mx-auto px-4 py-12 max-w-5xl">
           <header className="mb-12 text-center relative">
-            <div className="absolute right-0 top-0 z-50">
-              <span className="text-sm mr-4 text-slate-400">Bonjour, <span className="text-white font-bold">{user}</span></span>
+            <div className="absolute right-0 top-0 z-50 flex items-center gap-3">
+              {isAdmin && (
+                <Link to="/admin" className="text-amber-400 hover:text-amber-300 text-sm font-medium">
+                  🛠️ Admin
+                </Link>
+              )}
+              <span className="text-sm text-slate-400">Bonjour, <span className="text-white font-bold">{user}</span></span>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -91,6 +96,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminTemplates />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
@@ -98,3 +111,4 @@ function App() {
 }
 
 export default App;
+

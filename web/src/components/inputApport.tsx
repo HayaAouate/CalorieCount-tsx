@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useCalories } from '../hooks/useCalories';
-
-type Template = {
-    _id: string;
-    nom: string;
-    calories: number;
-    type: 'apport' | 'depense';
-};
+import TemplateSelect from './component/TemplateSelect';
+import type { Template } from './component/TemplateSelect';
 
 export default function InputApport() {
     const { ajouterApport } = useCalories();
@@ -34,16 +29,13 @@ export default function InputApport() {
         }
     };
 
-    const handleTemplateSelect = (templateId: string) => {
-        const template = templates.find(t => t._id === templateId);
-        if (template) {
-            setNom(template.nom);
-            setCalories(template.calories.toString());
-            setType(template.type);
-        }
+    // Utilise le composant réutilisable TemplateSelect
+    const handleTemplateSelect = (template: Template) => {
+        setNom(template.nom);
+        setCalories(template.calories.toString());
+        setType(template.type);
     };
 
-    const filteredTemplates = templates.filter(t => t.type === type);
     const isApport = type === 'apport';
     const mainColor = isApport ? 'indigo' : 'emerald';
     const gradient = isApport
@@ -80,26 +72,12 @@ export default function InputApport() {
                     </button>
                 </div>
 
-                {/* Template Dropdown */}
-                {filteredTemplates.length > 0 && (
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-slate-400 mb-1 ml-1">
-                            📋 Sélection rapide
-                        </label>
-                        <select
-                            onChange={(e) => handleTemplateSelect(e.target.value)}
-                            className={`w-full p-3 rounded-lg bg-slate-800/50 text-white border border-slate-700 focus:border-${mainColor}-500 focus:ring-2 focus:ring-${mainColor}-500/20 outline-none transition-all cursor-pointer`}
-                            defaultValue=""
-                        >
-                            <option value="" disabled>Choisir un template...</option>
-                            {filteredTemplates.map(t => (
-                                <option key={t._id} value={t._id}>
-                                    {t.nom} ({t.calories} kcal)
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
+                {/* Template Dropdown - Composant réutilisable */}
+                <TemplateSelect
+                    templates={templates}
+                    type={type}
+                    onSelect={handleTemplateSelect}
+                />
 
                 <div className="space-y-4">
                     <div className="group/input">
@@ -141,4 +119,3 @@ export default function InputApport() {
         </div>
     );
 }
-

@@ -54,7 +54,11 @@ export function CaloriesProvider({ children }: { children: ReactNode }) {
     }, [token]);
 
     const ajouterApport = async (nom: string, calories: number, type: 'apport' | 'depense' = 'apport') => {
-        if (!token) return;
+        console.log('🔴 ajouterApport called:', { nom, calories, type, token: token ? 'EXISTS' : 'NULL' });
+        if (!token) {
+            console.error('❌ No token available - user not authenticated!');
+            return;
+        }
         try {
             const response = await fetch('http://localhost:3000/calories', {
                 method: 'POST',

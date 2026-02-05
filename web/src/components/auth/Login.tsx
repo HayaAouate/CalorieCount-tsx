@@ -23,8 +23,13 @@ export default function Login() {
             const data = await response.json();
 
             if (response.ok) {
-                login(data.token, data.username);
-                navigate('/');
+                login(data.token, data.username, data.role || 'user');
+                // Redirection selon le rôle
+                if (data.role === 'admin') {
+                    navigate('/admin');
+                } else {
+                    navigate('/');
+                }
             } else {
                 setError(data.message || 'Login failed');
             }
