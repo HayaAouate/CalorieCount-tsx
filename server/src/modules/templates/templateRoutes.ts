@@ -31,7 +31,6 @@ templateRoutes.get("/", async (_request: Request, response: Response) => {
 templateRoutes.post(
     "/",
     authMiddleware as any,
-    // 🔒 SÉCURITÉ : Seul un admin peut exécuter cette action
     adminOnly,
     validator.body(templateSchema),
     async (request: Request, response: Response) => {

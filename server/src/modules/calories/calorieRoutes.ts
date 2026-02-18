@@ -10,7 +10,7 @@ import { authMiddleware } from "../auth/jwt";
 const validator = createValidator();
 export const calorieRoutes = express.Router();
 
-// Apply authMiddleware to all routes in this router
+// utilisation de authMiddleware pour toutes les routes
 calorieRoutes.use(authMiddleware as any);
 
 calorieRoutes.get("/", async (request: Request, response: Response) => {
@@ -64,7 +64,7 @@ calorieRoutes.delete("/:id", async (request: Request, response: Response) => {
     const { id } = request.params;
     try {
         const { ObjectId } = require("mongodb");
-        // Only delete if it belongs to the user
+        // on supprime l'entrée si elle appartient à l'utilisateur
         const result = await caloriesCollection.deleteOne({ _id: new ObjectId(id), userId });
         if (result.deletedCount === 0) {
             response.status(404).json({ message: "Entry not found" });

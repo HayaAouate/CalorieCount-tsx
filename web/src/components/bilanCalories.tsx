@@ -1,7 +1,7 @@
 import { useCalories } from '../hooks/useCalories';
 
 export default function BilanCalories() {
-    // On récupère le total calculé directement depuis le hook !
+    // On récupère le total depuis le hook 
     const { totalCalories } = useCalories();
 
     return (

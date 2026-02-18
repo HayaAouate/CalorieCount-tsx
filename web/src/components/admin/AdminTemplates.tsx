@@ -75,7 +75,7 @@ export default function AdminTemplates() {
             });
 
             if (res.ok) {
-                fetchTemplates();
+                fetchTemplates(); 
             }
         } catch (err) {
             console.error('Error deleting template:', err);

@@ -2,19 +2,18 @@ import { useState } from 'react';
 import { useCalories } from '../hooks/useCalories';
 
 export default function ListesApportsAll() {
-    // On récupère la liste (apports) depuis le hook
-    // @ts-ignore - supprimerApport might not be in the hook return type yet if I missed updating it, but it should be on Context.
-    // Actually typically useCalories returns everything from context. Let's check context.
-    // Wait, useCalories returns specific fields. I need to update useCalories hook too or just grab context directly.
-    // Let's assume I will update useCalories hook in next step or now.
-    // For now, let's look at useCalories.
+    // On récupère la liste des apports depuis le hook
     const { apports, supprimerApport } = useCalories();
-    const [sortNewestFirst, setSortNewestFirst] = useState(true);
+    const [trieDate, setTrieDate] = useState(true);
 
     const sortedApports = [...apports].sort((a, b) => {
         const dateA = new Date(a.date || 0).getTime();
         const dateB = new Date(b.date || 0).getTime();
-        return sortNewestFirst ? dateB - dateA : dateA - dateB;
+        return trieDate ? //si Vrai 
+        //Du plus recent au plus ancien
+        dateB - dateA :
+        //Si faux du plus anxien au plus recent
+         dateA - dateB; 
     });
 
     return (
@@ -27,11 +26,11 @@ export default function ListesApportsAll() {
                         Historique
                     </h2>
                     <button
-                        onClick={() => setSortNewestFirst(!sortNewestFirst)}
+                        onClick={() => setTrieDate(!trieDate)}
                         className="text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
-                        title={sortNewestFirst ? "Plus récent en premier" : "Plus ancien en premier"}
+                        title={trieDate ? "Plus ancien en premier" : "Plus récent en premier"}
                     >
-                        {sortNewestFirst ? '⬇️ Récent' : '⬆️ Ancien'}
+                        {trieDate ? '⬇️ Ancien' : '⬆️ Récent'}
                     </button>
                 </div>
 
