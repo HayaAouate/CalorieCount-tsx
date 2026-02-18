@@ -5,8 +5,7 @@ on:
 
 jobs:
   manuel-job:
-    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - name: Message manuel
-        run: echo "Ce workflow a été lancé manuellement sur la branche dev !"
+        run: echo "Ce workflow a été lancé manuellement !"
