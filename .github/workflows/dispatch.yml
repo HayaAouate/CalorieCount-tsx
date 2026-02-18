@@ -8,4 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Message manuel
-        run: echo "Ce workflow a été lancé manuellement !"
+        run: echo "Le workflow a été lancé manuellement !"
